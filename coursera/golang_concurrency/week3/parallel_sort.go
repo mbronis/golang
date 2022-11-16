@@ -113,8 +113,8 @@ func merge(s [][]int) []int {
 }
 
 func main() {
-	nChunks := 4
-	maxLen := 100
+	const nChunks = 4
+	const maxLen = 100
 
 	// get input
 	numbers, err := getInput(nChunks, maxLen)
