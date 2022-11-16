@@ -26,7 +26,7 @@ func (e *NotEnoughNumbersError) Error() string {
 	return "there should be at least " + strconv.Itoa(e.expected) + " numbers, got " + strconv.Itoa(e.count)
 }
 
-func get_input(n_chunks, max_len int) ([]int, error) {
+func getInput(n_chunks, max_len int) ([]int, error) {
 	var input string
 	var err error
 
@@ -59,37 +59,72 @@ func get_input(n_chunks, max_len int) ([]int, error) {
 	return numbers, err
 }
 
-func partition(s []int, n_chunks int) [][]int {
-	chunk_size := len(s) / n_chunks
+func partition(s []int, nChunks int) [][]int {
+	chunkSize := len(s) / nChunks
 	var chunks [][]int
 	for {
 		if len(s) == 0 {
 			break
 		}
-		if len(s) < chunk_size {
-			chunk_size = len(s)
+		if len(s) < chunkSize {
+			for i, v := range s {
+				chunks[i] = append(chunks[i], v)
+			}
+			return chunks
 		}
 
-		chunks = append(chunks, s[0:chunk_size])
-		s = s[chunk_size:]
+		chunks = append(chunks, s[0:chunkSize])
+		s = s[chunkSize:]
 	}
 
 	return chunks
 }
 
+func mergeTwo(a, b []int) []int {
+	i, j := 0, 0
+	var result []int
+
+	for (i < len(a)) && (j < len(b)) {
+		if a[i] < b[j] {
+			result = append(result, a[i])
+			i++
+		} else {
+			result = append(result, b[j])
+			j++
+		}
+	}
+	if i < len(a) {
+		result = append(result, a[i:]...)
+	}
+	if j < len(b) {
+		result = append(result, b[j:]...)
+	}
+	return result
+}
+
+func merge(s [][]int) []int {
+	var result []int
+
+	for _, ss := range s {
+		result = mergeTwo(result, ss)
+	}
+
+	return result
+}
+
 func main() {
-	n_chunks := 4
-	max_len := 100
+	nChunks := 4
+	maxLen := 100
 
 	// get input
-	numbers, err := get_input(n_chunks, max_len)
+	numbers, err := getInput(nChunks, maxLen)
 	if err != nil {
 		fmt.Printf("Invalid imput - %s\n", err)
 		return
 	}
-	chunks := partition(numbers, n_chunks)
 
-	// spawn sorting goroutines
+	// split to chunks and sort each in goroutine
+	chunks := partition(numbers, nChunks)
 	ch := make(chan []int)
 	for _, chunk := range chunks {
 		go func(s []int, c chan []int) {
@@ -99,14 +134,15 @@ func main() {
 		}(chunk, ch)
 	}
 
-	// gather and flatten sorted chunks
-	var sorted_chunks []int
+	// gather sorted chunks
+	var sortedChunks [][]int
 	for range chunks {
 		chunk := <-ch
-		sorted_chunks = append(sorted_chunks, chunk...)
+		sortedChunks = append(sortedChunks, chunk)
 	}
 
-	fmt.Println("Flattened sorted slices:", sorted_chunks)
-	sort.Ints(sorted_chunks)
-	fmt.Println("Sorted slice:", sorted_chunks)
+	// merge sorted chunks
+	fmt.Println("Flattened sorted slices:", sortedChunks)
+	result := merge(sortedChunks)
+	fmt.Println("Result:", result)
 }
