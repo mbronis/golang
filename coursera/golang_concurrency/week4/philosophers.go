@@ -31,7 +31,6 @@ package main
 import (
 	"fmt"
 	"sync"
-	"time"
 )
 
 type ChopS struct{ sync.Mutex }
@@ -40,8 +39,8 @@ type Philo struct {
 	eaten           int
 }
 
-func (p *Philo) eat(eaters chan *Philo) {
-	for {
+func (p *Philo) eat(eaters chan *Philo, wg *sync.WaitGroup) {
+	for i := 0; i < 3; i++ {
 		p.leftCS.Lock()
 		p.rightCS.Lock()
 		eaters <- p
@@ -52,6 +51,7 @@ func (p *Philo) eat(eaters chan *Philo) {
 		p.rightCS.Unlock()
 		p.leftCS.Unlock()
 	}
+	wg.Done()
 }
 
 func main() {
@@ -71,11 +71,13 @@ func main() {
 		philos[i] = &Philo{leftCS, rightCS, 0}
 	}
 
+	var wg sync.WaitGroup
 	eaters := make(chan *Philo, 2)
 	for i := 0; i < 5; i++ {
-		go philos[i].eat(eaters)
+		wg.Add(1)
+		go philos[i].eat(eaters, &wg)
 	}
-	time.Sleep(time.Second * 1)
+	wg.Wait()
 
 	for i, p := range philos {
 		fmt.Printf("%d ate %d\n", i, p.eaten)
