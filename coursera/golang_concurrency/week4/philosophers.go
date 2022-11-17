@@ -30,8 +30,51 @@ package main
 
 import (
 	"fmt"
+	"sync"
+	"time"
 )
+
+type ChopS struct{ sync.Mutex }
+type Philo struct {
+	leftCS, rightCS *ChopS
+	eaten           int
+}
+
+func (p *Philo) eat() {
+	for {
+		p.leftCS.Lock()
+		p.rightCS.Lock()
+
+		p.eaten++
+
+		p.rightCS.Unlock()
+		p.leftCS.Unlock()
+	}
+}
 
 func main() {
 	fmt.Println("Dining Philosophers")
+
+	CSticks := make([]*ChopS, 5)
+	for i := 0; i < 5; i++ {
+		CSticks[i] = new(ChopS)
+	}
+
+	philos := make([]*Philo, 5)
+	for i := 0; i < 5; i++ {
+		leftCS, rightCS := CSticks[i], CSticks[(i+1)%5]
+		if i > (i+1)%5 {
+			leftCS, rightCS = rightCS, leftCS
+		}
+		philos[i] = &Philo{leftCS, rightCS, 0}
+	}
+
+	for i := 0; i < 5; i++ {
+		go philos[i].eat()
+	}
+	time.Sleep(time.Second * 1)
+
+	for i, p := range philos {
+		fmt.Printf("%d ate %d\n", i, p.eaten)
+	}
 }
