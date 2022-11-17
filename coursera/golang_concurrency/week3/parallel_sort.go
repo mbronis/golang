@@ -26,7 +26,7 @@ func (e *NotEnoughNumbersError) Error() string {
 	return "there should be at least " + strconv.Itoa(e.expected) + " numbers, got " + strconv.Itoa(e.count)
 }
 
-func getInput(n_chunks, max_len int) ([]int, error) {
+func getInput(n_chunks int) ([]int, error) {
 	var input string
 	var err error
 
@@ -37,11 +37,8 @@ func getInput(n_chunks, max_len int) ([]int, error) {
 
 	// parse input to int slice
 	input_splitted := strings.Split(input, " ")
-	numbers := make([]int, 0, max_len)
-	for i, n := range input_splitted {
-		if i > max_len {
-			break
-		}
+	numbers := make([]int, 0)
+	for _, n := range input_splitted {
 		if value, err := strconv.Atoi(n); err != nil {
 			continue
 		} else {
@@ -70,7 +67,7 @@ func partition(s []int, nChunks int) [][]int {
 			for i, v := range s {
 				chunks[i] = append(chunks[i], v)
 			}
-			return chunks
+			break
 		}
 
 		chunks = append(chunks, s[0:chunkSize])
@@ -114,10 +111,9 @@ func merge(s [][]int) []int {
 
 func main() {
 	const nChunks = 4
-	const maxLen = 100
 
 	// get input
-	numbers, err := getInput(nChunks, maxLen)
+	numbers, err := getInput(nChunks)
 	if err != nil {
 		fmt.Printf("Invalid imput - %s\n", err)
 		return
@@ -125,6 +121,7 @@ func main() {
 
 	// split to chunks and sort each in goroutine
 	chunks := partition(numbers, nChunks)
+	fmt.Println("chunks pre sort", chunks)
 	ch := make(chan []int)
 	for _, chunk := range chunks {
 		go func(s []int, c chan []int) {
