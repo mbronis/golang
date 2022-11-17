@@ -40,13 +40,15 @@ type Philo struct {
 	eaten           int
 }
 
-func (p *Philo) eat() {
+func (p *Philo) eat(eaters chan *Philo) {
 	for {
 		p.leftCS.Lock()
 		p.rightCS.Lock()
+		eaters <- p
 
 		p.eaten++
 
+		<-eaters
 		p.rightCS.Unlock()
 		p.leftCS.Unlock()
 	}
@@ -69,8 +71,9 @@ func main() {
 		philos[i] = &Philo{leftCS, rightCS, 0}
 	}
 
+	eaters := make(chan *Philo, 2)
 	for i := 0; i < 5; i++ {
-		go philos[i].eat()
+		go philos[i].eat(eaters)
 	}
 	time.Sleep(time.Second * 1)
 
