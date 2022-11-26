@@ -35,23 +35,38 @@ import (
 
 type ChopS struct{ sync.Mutex }
 type Philo struct {
+	no              int
 	leftCS, rightCS *ChopS
 	eaten           int
 }
 
-func (p *Philo) eat(eaters chan *Philo, wg *sync.WaitGroup) {
+func (p *Philo) eat(host *Host, wg *sync.WaitGroup) {
 	for i := 0; i < 3; i++ {
 		p.leftCS.Lock()
 		p.rightCS.Lock()
-		eaters <- p
+		host.getPermission(p)
+		fmt.Println("starting to eat", p.no)
 
 		p.eaten++
 
-		<-eaters
+		fmt.Println("finishing eating", p.no)
+		host.releasePermission()
 		p.rightCS.Unlock()
 		p.leftCS.Unlock()
 	}
 	wg.Done()
+}
+
+type Host struct {
+	dining chan *Philo
+}
+
+func (h *Host) getPermission(p *Philo) {
+	h.dining <- p
+}
+
+func (h *Host) releasePermission() {
+	<-h.dining
 }
 
 func main() {
@@ -68,18 +83,18 @@ func main() {
 		if i > (i+1)%5 {
 			leftCS, rightCS = rightCS, leftCS
 		}
-		philos[i] = &Philo{leftCS, rightCS, 0}
+		philos[i] = &Philo{i + 1, leftCS, rightCS, 0}
 	}
 
 	var wg sync.WaitGroup
-	eaters := make(chan *Philo, 2)
+	host := Host{make(chan *Philo, 2)}
 	for i := 0; i < 5; i++ {
 		wg.Add(1)
-		go philos[i].eat(eaters, &wg)
+		go philos[i].eat(&host, &wg)
 	}
 	wg.Wait()
 
-	for i, p := range philos {
-		fmt.Printf("%d ate %d\n", i, p.eaten)
+	for _, p := range philos {
+		fmt.Printf("%d ate %d\n", p.no, p.eaten)
 	}
 }
