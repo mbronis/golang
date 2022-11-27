@@ -105,11 +105,43 @@ has two main components:
     The source code is used to write and read serialized data.
     The serialized data is a payload in `HTTP/2` used by `GRPC`
 
+## GRPC installation
+- quick start [link](https://grpc.io/docs/languages/go/quickstart/)
+- install Protocol Buffer compiler:
+    ```bash
+    brew install protobuff
+    ```
+- install Go plugins:
+    ```bash
+    go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
+    go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+    ```
+    ! no longer supported thus needed, will be using raw protoc commands later.
+- update PATH:
+    ```bash
+    export PATH="$PATH:$(go env GOPATH)/bin"
+    ```
+
+## GRPC code gen
+Generate Go package based on .proto files:
+```bash
+protoc --go_out=internal/adapters/framework/left/grpc \
+	--proto_path=internal/adapters/framework/left/grpc/proto \
+	internal/adapters/framework/left/grpc/proto/number_msg.proto
+
+protoc --go-grpc_out=internal/adapters/framework/left/grpc \
+	--proto_path=internal/adapters/framework/left/grpc/proto \
+	internal/adapters/framework/left/grpc/proto/arithmetic_svc.proto
+```
+Running those commands will make protobuf generate Go package based on .proto files.
+The package files will be put in the directory defined in .proto files, in our case: `grpc/pb`.
+The second command uses `--go-grpc_out` flag to specify that its a grpc service.
 
 ## Adapters
-<img src="./resources/tree_s4.png" alt="drawing" width="250"/>
+<img src="./resources/tree_s4.png" alt="drawing" width="400"/>
+
 
 Added driving framework adapters:
-- `server.go`
 - `rpc.go`
-- `proto/.go`
+- `server.go`
+- `proto/*.proto` definition of service and messages for protobuf compiler
