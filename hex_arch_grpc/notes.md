@@ -1,10 +1,10 @@
 # How to struct your Go App - Hexagonal Architecture
 How to apply hex architecture (ports & adapters) to a `grpc api` app in Go - video [link](https://www.youtube.com/watch?v=MpFog2kZsHk).
 
-Other hex-arch resources:
+Other hex-arch & grps resources:
 - DDD, Hexagonal, Onion, Clean, CQRS, How I put it all together [blog post](https://herbertograca.com/2017/11/16/explicit-architecture-01-ddd-hexagonal-onion-clean-cqrs-how-i-put-it-all-together/)
 - Hexagon - a Kotlin microservices toolkit [page](https://hexagonkt.com/)
-
+- [grpc.io]( )
 
 # What is hexagonal architecture
 [source](https://www.youtube.com/watch?v=MpFog2kZsHk)  
@@ -79,4 +79,37 @@ it provides and interface for another application to interact with the applicati
     }
     ```
 
+# Stage 3 - Framework layer (driven adapters)
+<img src="./resources/tree_s3.png" alt="drawing" width="250"/>
 
+Added driven adapters:
+- `DBPort` a driven port for db handling
+- `internal/adapters/framework/right/db/Adapter` an implementation of `DBPort` using `mysql` driver
+- an access for Application layer to the db, by adding a `DBAdapter` attribute to the `ApiAdapter`  
+Similarly to `ArithAdapter` `DBAdapter` will be provided via dependency injection.
+
+# Stage 4 - grpc (driving adapters)
+
+## GRPC
+- `RPC` - remote procedure call 
+    - Allows for external computers to make calls that execute procedures in a different address space (or on another computer).  
+    - These calls are coded as if it were a local procedure call without the programmer explicitly coding the details for the remote interaction.  
+    - RPC allow to executer procedures on a remote computer as if you are executing local procedures from within your own program.
+- `GRPC` uses `HTTP/2` (binary) protocol to send requests and receive responses.  
+Being binary format `HTTP/2` makes transfer and parsing the data much more machine friendly than `HTTP/1` (which is textual) which makes it faster, more efficient and less error prone.
+- `GRPC` uses also `Protocol Buffers` (`Protobuf`)
+- `Protobuf`  
+has two main components:
+    - a method to serialize structured data (like `json` or `xml`) into binary format,
+    - and a language to describe the structure of data and a program that generates source code from that description  
+    The source code is used to write and read serialized data.
+    The serialized data is a payload in `HTTP/2` used by `GRPC`
+
+
+## Adapters
+<img src="./resources/tree_s4.png" alt="drawing" width="250"/>
+
+Added driving framework adapters:
+- `server.go`
+- `rpc.go`
+- `proto/.go`
