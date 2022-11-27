@@ -52,3 +52,31 @@ that implements the interface
 
 which completes core layer of our application.
 
+# Stage 2 - Application layer
+<img src="./resources/tree_s2.png" alt="drawing" width="250"/>
+
+Here we will create port and adapter for the Application layer.
+- `APIPort`: an application layer interface  
+Here API means intermediary that allows two applications to communicate or interact with each other,  
+it provides and interface for another application to interact with the application that defines the API.
+- Application layer adapter: `internal/adapters/app/api/Adapter`  
+    Application layer adapter will have `arith` field which contains core adapter.  
+    This is how application layer will access the core of our application.  
+    `ArithAdapter` will be provided to an `ApiAdapter` through dependency injection.
+    <img src="./resources/port_adapters.drawio.png" alt="drawing" width="350"/>
+
+    ```go
+    type Adapter struct {
+        arith ports.ArithmeticPort
+    }
+
+    func NewAdapter(arith ports.ArithmeticPort) *Adapter {
+        return &Adapter{arith: arith}
+    }
+
+    func (apiAdapter Adapter) GetAddition(a, b int32) (int32, error) {
+        return apiAdapter.arith.Addition(a, b)
+    }
+    ```
+
+
